@@ -12,6 +12,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import ninja.irvyne.iwma4earthquakes.api.EarthquakeService
 import ninja.irvyne.iwma4earthquakes.api.model.EarthquakeData
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -23,6 +25,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mService: EarthquakeService
+    private lateinit var mExtraMagnitude: String
+    private lateinit var mExtraTime: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,14 +35,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        val magnitude = intent.getStringExtra(EXTRA_MAGNITUDE) ?: "all"
-        val time = intent.getStringExtra(EXTRA_TIME) ?: "day"
-
-        Log.d(TAG, "Magnitude is $magnitude and time is $time")
+        mExtraMagnitude = intent.getStringExtra(EXTRA_MAGNITUDE) ?: "all"
+        mExtraTime = intent.getStringExtra(EXTRA_TIME) ?: "day"
 
         mService = Retrofit.Builder().apply {
             baseUrl("https://earthquake.usgs.gov/")
             addConverterFactory(GsonConverterFactory.create())
+            client(
+                    OkHttpClient.Builder()
+                            .addInterceptor(HttpLoggingInterceptor().apply {
+                                level = HttpLoggingInterceptor.Level.HEADERS
+                            })
+                            .build()
+            )
         }.build().create(EarthquakeService::class.java)
     }
 
@@ -57,9 +66,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16f))
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 0f))
 
-        mService.listEarthquakes(magnitude = "significant", time = "hour").enqueue(object : Callback<EarthquakeData> {
+        mService.listEarthquakes(magnitude = mExtraMagnitude, time = mExtraTime).enqueue(object : Callback<EarthquakeData> {
             override fun onFailure(call: Call<EarthquakeData>?, t: Throwable?) {
                 Log.e(TAG, "response failed!")
 
@@ -72,13 +81,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     feature.geometry?.coordinates?.let {
                         val latitude = it[1]
                         val longitude = it[0]
+                        val color = when (feature.properties?.mag ?: 0.0) {
+                            in 0.0..1.5 -> BitmapDescriptorFactory.HUE_CYAN
+                            in 1.5..3.0 -> BitmapDescriptorFactory.HUE_AZURE
+                            in 3.0..4.5 -> BitmapDescriptorFactory.HUE_MAGENTA
+                            in 4.5..6.0 -> BitmapDescriptorFactory.HUE_ORANGE
+                            else -> BitmapDescriptorFactory.HUE_RED
+                        }
 
                         mMap.addMarker(
                                 MarkerOptions()
                                         .position(LatLng(latitude, longitude))
                                         .title(feature.properties?.place ?: "No title")
-                                        .snippet("zefijnzefjnezfzjn")
-                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
+                                        .snippet(feature.properties?.mag.toString())
+                                        .icon(BitmapDescriptorFactory.defaultMarker(color))
                         )
                     }
                 }
