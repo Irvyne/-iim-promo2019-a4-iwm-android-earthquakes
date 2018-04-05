@@ -31,6 +31,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        val magnitude = intent.getStringExtra(EXTRA_MAGNITUDE) ?: "all"
+        val time = intent.getStringExtra(EXTRA_TIME) ?: "day"
+
+        Log.d(TAG, "Magnitude is $magnitude and time is $time")
+
         mService = Retrofit.Builder().apply {
             baseUrl("https://earthquake.usgs.gov/")
             addConverterFactory(GsonConverterFactory.create())
@@ -54,7 +59,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16f))
 
-        mService.listSignificantEarthquakes().enqueue(object : Callback<EarthquakeData> {
+        mService.listEarthquakes(magnitude = "significant", time = "hour").enqueue(object : Callback<EarthquakeData> {
             override fun onFailure(call: Call<EarthquakeData>?, t: Throwable?) {
                 Log.e(TAG, "response failed!")
 
@@ -85,5 +90,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     companion object {
         private const val TAG = "MapsActivity"
+
+        const val EXTRA_MAGNITUDE = "magnitude"
+        const val EXTRA_TIME = "time"
     }
 }
