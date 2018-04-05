@@ -7,6 +7,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import ninja.irvyne.iwma4earthquakes.api.EarthquakeService
@@ -51,7 +52,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16f))
 
         mService.listSignificantEarthquakes().enqueue(object : Callback<EarthquakeData> {
             override fun onFailure(call: Call<EarthquakeData>?, t: Throwable?) {
@@ -61,6 +62,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             override fun onResponse(call: Call<EarthquakeData>?, response: Response<EarthquakeData>?) {
+                response?.body()?.features?.forEach { feature ->
+
+                    feature.geometry?.coordinates?.let {
+                        val latitude = it[1]
+                        val longitude = it[0]
+
+                        mMap.addMarker(
+                                MarkerOptions()
+                                        .position(LatLng(latitude, longitude))
+                                        .title(feature.properties?.place ?: "No title")
+                                        .snippet("zefijnzefjnezfzjn")
+                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
+                        )
+                    }
+                }
+
                 Log.d(TAG, response?.body().toString())
             }
         })
