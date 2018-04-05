@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.activity_main.*
+import ninja.irvyne.iwma4earthquakes.extension.start
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         mainMagnitudeSpinner.adapter = magnitudeAdapter
         mainTimeSpinner.adapter = timeAdapter
 
-        mainButton.setOnClickListener {
+        mainMapsButton.setOnClickListener {
             val magnitude = when (mainMagnitudeSpinner.selectedItemPosition) {
                 0 -> "all"
                 1 -> "1.0"
@@ -40,6 +41,31 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, MapsActivity::class.java).apply {
                 putExtra(MapsActivity.EXTRA_MAGNITUDE, magnitude)
                 putExtra(MapsActivity.EXTRA_TIME, time)
+            })
+        }
+
+        mainListButton.setOnClickListener {
+            val magnitude = when (mainMagnitudeSpinner.selectedItemPosition) {
+                0 -> "all"
+                1 -> "1.0"
+                2 -> "2.5"
+                3 -> "4.5"
+                4 -> "significant"
+                else -> throw Exception("Magnitude unknown")
+            }
+
+            val time = when (mainTimeSpinner.selectedItemPosition) {
+                0 -> "hour"
+                1 -> "day"
+                2 -> "week"
+                3 -> "month"
+                else -> throw Exception("Time unknown")
+            }
+
+            //ListActivity::class.start(this)
+            startActivity(Intent(this, ListActivity::class.java).apply {
+                putExtra(ListActivity.EXTRA_MAGNITUDE, magnitude)
+                putExtra(ListActivity.EXTRA_TIME, time)
             })
         }
     }

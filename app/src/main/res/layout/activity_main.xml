@@ -25,9 +25,15 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/mainButton"
+        android:id="@+id/mainMapsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/btn_maps" />
+
+    <Button
+        android:id="@+id/mainListButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_list" />
 
 </LinearLayout>
