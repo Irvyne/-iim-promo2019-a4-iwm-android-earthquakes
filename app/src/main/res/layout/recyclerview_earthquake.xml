@@ -1,9 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
-    android:gravity="center"
-    android:textSize="18sp"
-    android:textStyle="bold"
-    tools:text="hvchchc" />
+    android:layout_height="50dp">
+
+    <TextView
+        android:id="@+id/earthquakeMagnitude"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:textStyle="bold"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:background="@color/colorAccent"
+        tools:text="7.8" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_height="50dp">
+
+        <TextView
+            android:id="@+id/earthquakeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:gravity="start|bottom"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="Eartquake blablab" />
+
+        <TextView
+            android:id="@+id/earthquakeSnippet"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:gravity="start|top"
+            android:textSize="12sp"
+            android:textStyle="bold|italic"
+            tools:text="@tools:sample/lorem" />
+
+    </LinearLayout>
+
+
+</LinearLayout>
