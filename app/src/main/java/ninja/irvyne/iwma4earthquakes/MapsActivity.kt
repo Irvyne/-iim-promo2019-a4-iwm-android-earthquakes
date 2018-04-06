@@ -27,6 +27,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mService: EarthquakeService
     private lateinit var mExtraMagnitude: String
     private lateinit var mExtraTime: String
+    private var mExtraFeatureId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +38,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         mExtraMagnitude = intent.getStringExtra(EXTRA_MAGNITUDE) ?: "all"
         mExtraTime = intent.getStringExtra(EXTRA_TIME) ?: "day"
+        mExtraFeatureId = intent.getStringExtra(EXTRA_FEATURE_ID)
 
         mService = Retrofit.Builder().apply {
             baseUrl("https://earthquake.usgs.gov/")
@@ -66,7 +68,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 0f))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 0f))
 
         mService.listEarthquakes(magnitude = mExtraMagnitude, time = mExtraTime).enqueue(object : Callback<EarthquakeData> {
             override fun onFailure(call: Call<EarthquakeData>?, t: Throwable?) {
@@ -81,7 +83,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     feature.geometry?.coordinates?.let {
                         val latitude = it[1]
                         val longitude = it[0]
-                        val color = when (feature.properties?.mag ?: 0.0) {
+                        val color = if (mExtraFeatureId != null && mExtraFeatureId == feature.id) BitmapDescriptorFactory.HUE_VIOLET else when (feature.properties?.mag
+                                ?: 0.0) {
                             in 0.0..1.5 -> BitmapDescriptorFactory.HUE_CYAN
                             in 1.5..3.0 -> BitmapDescriptorFactory.HUE_AZURE
                             in 3.0..4.5 -> BitmapDescriptorFactory.HUE_MAGENTA
@@ -89,13 +92,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                             else -> BitmapDescriptorFactory.HUE_RED
                         }
 
-                        mMap.addMarker(
+                        val marker = mMap.addMarker(
                                 MarkerOptions()
                                         .position(LatLng(latitude, longitude))
                                         .title(feature.properties?.place ?: "No title")
                                         .snippet(feature.properties?.mag.toString())
                                         .icon(BitmapDescriptorFactory.defaultMarker(color))
                         )
+
+                        if (mExtraFeatureId != null && mExtraFeatureId == feature.id) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), 10f))
+                            marker.showInfoWindow()
+                        }
                     }
                 }
 
@@ -109,5 +117,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         const val EXTRA_MAGNITUDE = "magnitude"
         const val EXTRA_TIME = "time"
+        const val EXTRA_FEATURE_ID = "feature_id"
     }
 }
